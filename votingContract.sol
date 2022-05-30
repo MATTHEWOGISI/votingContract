@@ -6,7 +6,7 @@ pragma solidity >=0.7.0 <0.9.0;
  * @title Ballot
  * @dev Implements voting process along with vote delegation
  */
-import "https://github.com/Ekolance/Voting-Smart-Contract-Interface/blob/main/IVotingContract.sol";
+import "./IVotingContract.sol";
 
 contract VotingContract is IVotingContract {
    
@@ -81,28 +81,7 @@ contract VotingContract is IVotingContract {
             delegate_.weight += sender.weight;
         }
     }
-
-    /**
-     * @dev Give your vote (including votes delegated to you) to proposal 'proposals[proposal].name'.
-     * @param proposal index of proposal in the proposals array
-     */
-    function vote(uint proposal) public {
-        Voter storage sender = voters[msg.sender];
-        require(sender.weight != 0, "Has no right to vote");
-        require(!sender.voted, "Already voted.");
-        sender.voted = true;
-        sender.vote = proposal;
-
-        // If 'proposal' is out of the range of the array,
-        // this will throw automatically and revert all
-        // changes.
-        candidates[candidate].voteCount += sender.weight;
-    }
-
-    /** 
-     * @dev Computes the winning proposal taking all previous votes into account.
-     * @return winningProposal_ index of winning proposal in the proposals array
-     */
+        
     function winningCandidate() public view
             returns (uint winningCandidate_)
     {
@@ -122,10 +101,10 @@ contract VotingContract is IVotingContract {
     function winnerName() public view
             returns (bytes32 winnerName_)
     {
-        winnerName_ = candidates[winningCandidate()].name;
+        winnerName_ = candidates[winningCandidate()].candidateName;
     }
 
-  function addCandidate(string name) external override returns(bool)
+  function addCandidate(bytes32 name) external override returns(bool)
   {       
             // 'Proposal({...})' creates a temporary
             // Proposal object and 'proposals.push(...)'
@@ -136,7 +115,9 @@ contract VotingContract is IVotingContract {
                 candidateId: newCandidateId,
                 candidateName: name ,
                 voteCount: 0
-            }));        
+            }));       
+
+        return true; 
   }
     
     function voteCandidate(uint candidateId) external override returns(bool)
@@ -145,18 +126,20 @@ contract VotingContract is IVotingContract {
         require(sender.weight != 0, "Has no right to vote");
         require(!sender.voted, "Already voted.");
         sender.voted = true;
-        sender.vote = candidate;
+        sender.vote = candidateId;
 
         // If 'proposal' is out of the range of the array,
         // this will throw automatically and revert all
         // changes.
-        candidates[candidate].voteCount += sender.weight;
+        candidates[candidateId].voteCount += sender.weight;
+
+        return true;
     }
 
     //getWinner returns the name of the winner
-    function getWinner() external override returns(bytes32)
+    function getWinner() external override view returns(bytes32)
     {
-        
+        return candidates[winningCandidate()].candidateName;
     }
 
 
